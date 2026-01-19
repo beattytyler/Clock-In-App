@@ -21,6 +21,8 @@ Create a `.env` file (already included in this repo) with:
 This will create any missing tables and start the Flask dev server.
 
 ## Admin Access
+- (These are default parameters that can be changed)
+- These values are hard-coded in routs.py inside the admin_login() function
 - Admin login: `admin` / `admin123`
 - Employee login: uses employee codes created by admin
 
