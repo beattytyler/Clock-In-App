@@ -18,6 +18,14 @@ class TimeRecord(db.Model):
 
 
 class EmployeeBonus(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint(
+            "employee_id",
+            "period_start",
+            "period_end",
+            name="uq_employee_bonus_period"
+        ),
+    )
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     period_start = db.Column(db.Date, nullable=False)
@@ -27,6 +35,14 @@ class EmployeeBonus(db.Model):
 
 
 class EmployeeHoursAdjustment(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint(
+            "employee_id",
+            "period_start",
+            "period_end",
+            name="uq_employee_hours_period"
+        ),
+    )
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     period_start = db.Column(db.Date, nullable=False)
