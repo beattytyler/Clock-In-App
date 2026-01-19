@@ -24,10 +24,15 @@
                     <label for="employee_code">Employee Code</label>
                     <input type="text" name="employee_code" id="employee_code" maxlength="4" required
                            class="input-tall">
-                    <p class="form-hint">Employee code must be 4 characters.</p>
+                    <p class="form-hint">Must be 4 characters.</p>
                 </div>
 
                 <div class="row-actions">
+                    <input type="hidden" name="is_manager" id="is_manager_value" value="0">
+                    <button type="button" id="manager-toggle" class="toggle-button"
+                            aria-pressed="false">
+                        Manager
+                    </button>
                     <button type="submit">Add Employee</button>
                 </div>
             </form>
@@ -44,8 +49,30 @@
         (function () {
             const employeeForm = document.getElementById("employee-form");
             const employeeMessage = document.getElementById("employee-message");
+            const managerToggle = document.getElementById("manager-toggle");
+            const managerValue = document.getElementById("is_manager_value");
 
-            if (!employeeForm || !window.fetch) {
+            if (!employeeForm) {
+                return;
+            }
+
+            function setManagerState(isActive) {
+                if (!managerToggle || !managerValue) {
+                    return;
+                }
+                managerValue.value = isActive ? "1" : "0";
+                managerToggle.classList.toggle("is-active", isActive);
+                managerToggle.setAttribute("aria-pressed", isActive ? "true" : "false");
+            }
+
+            if (managerToggle) {
+                managerToggle.addEventListener("click", function () {
+                    const isActive = managerToggle.classList.contains("is-active");
+                    setManagerState(!isActive);
+                });
+            }
+
+            if (!window.fetch) {
                 return;
             }
 
@@ -77,6 +104,7 @@
                         setEmployeeMessage(data.message, !data.success);
                         if (data.success) {
                             employeeForm.reset();
+                            setManagerState(false);
                         }
                     })
                     .catch(() => {

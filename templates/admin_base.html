@@ -28,6 +28,16 @@
                     <img class="nav-icon-img" src="{{ url_for('static', filename='icons/edit-employee.png') }}" alt="">
                     Manage Employees
                 </a>
+                <a class="nav-link {% if active_nav == 'hours' %}active{% endif %}"
+                   href="{{ url_for('main.admin_hours_bonuses') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/admin.png') }}" alt="">
+                    Hours &amp; Bonuses
+                </a>
+                <a class="nav-link {% if active_nav == 'export' %}active{% endif %}"
+                   href="{{ url_for('main.admin_export_hours') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/payroll-report.png') }}" alt="">
+                    Export Hours
+                </a>
                 <a class="nav-link nav-logout" href="{{ url_for('main.logout') }}">
                     <img class="nav-icon-img" src="{{ url_for('static', filename='icons/logout.png') }}" alt="">
                     Logout

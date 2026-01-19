@@ -1,0 +1,79 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Export Hours{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <h2>Export Hours</h2>
+        <p class="helper-text">Generate export lines for the selected period.</p>
+        {% if status_message %}
+            <p class="status-message {% if status_type == 'error' %}status-error{% else %}status-success{% endif %}">
+                {{ status_message }}
+            </p>
+        {% endif %}
+
+        <form method="GET" action="{{ url_for('main.admin_export_hours') }}" class="admin-form">
+            <label for="export_email">Email</label>
+            <input type="email" name="email" id="export_email" value="{{ email }}" placeholder="payroll@example.com">
+            <p class="form-hint">Used to open an email draft with the export lines.</p>
+
+            <label for="start_date">Start Date</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date_value }}">
+
+            <label for="end_date">End Date</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date_value }}">
+
+            <button type="submit">Update Export</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Export Output</h3>
+        <p class="helper-text">Period: {{ period_label }}</p>
+        {% if export_rows %}
+            <div class="export-actions">
+                <button type="button" id="export-email-button">Open Gmail Draft</button>
+                <button type="button" id="export-copy-button" class="button-ghost">Copy Lines</button>
+            </div>
+            <textarea id="export-body" class="export-output" readonly>{{ export_body }}</textarea>
+        {% else %}
+            <p class="empty-state">No employees found.</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            const emailInput = document.getElementById("export_email");
+            const exportBody = document.getElementById("export-body");
+            const emailButton = document.getElementById("export-email-button");
+            const copyButton = document.getElementById("export-copy-button");
+
+            if (emailButton && exportBody) {
+                emailButton.addEventListener("click", function () {
+                    const email = emailInput ? emailInput.value.trim() : "";
+                    const subject = "Hours Export";
+                    const body = exportBody.value || "";
+                    const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1"
+                        + "&to=" + encodeURIComponent(email)
+                        + "&su=" + encodeURIComponent(subject)
+                        + "&body=" + encodeURIComponent(body);
+                    window.open(gmailUrl, "_blank", "noopener");
+                });
+            }
+
+            if (copyButton && exportBody) {
+                copyButton.addEventListener("click", function () {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(exportBody.value || "");
+                    } else {
+                        exportBody.focus();
+                        exportBody.select();
+                        document.execCommand("copy");
+                    }
+                });
+            }
+        })();
+    </script>
+{% endblock %}

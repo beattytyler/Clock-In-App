@@ -1,0 +1,284 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Hours &amp; Bonuses{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <h2>Hours &amp; Bonuses</h2>
+        <p class="helper-text">Edit shift times and assign bonuses for a selected period.</p>
+        {% if status_message %}
+            <p class="status-message {% if status_type == 'error' %}status-error{% else %}status-success{% endif %}">
+                {{ status_message }}
+            </p>
+        {% endif %}
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        <form method="GET" action="{{ url_for('main.admin_hours_bonuses') }}" class="admin-form">
+            <input type="hidden" name="view_mode" value="{{ view_mode }}">
+            {% if view_mode == "shift" %}
+                <label for="employee_id">Employee</label>
+                <select name="employee_id" id="employee_id">
+                    <option value="">Select an employee</option>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}"
+                            {% if selected_employee and employee.id == selected_employee.id %}selected{% endif %}>
+                            {{ employee.name }} ({{ employee.employee_code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+
+            <label for="start_date">Start Date</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date_value }}">
+
+            <label for="end_date">End Date</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date_value }}">
+
+            <button type="submit">Update View</button>
+        </form>
+        {% if view_mode == "shift" %}
+            <form method="GET" action="{{ url_for('main.admin_hours_bonuses') }}" class="admin-form">
+                <input type="hidden" name="view_mode" value="total">
+                <input type="hidden" name="start_date" value="{{ start_date_value }}">
+                <input type="hidden" name="end_date" value="{{ end_date_value }}">
+                <button type="submit" class="button-ghost">Back to Total Hours View</button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if view_mode == "shift" %}
+        <div class="card">
+            <h3>Shift View</h3>
+            <p class="helper-text">Period: {{ period_label }}</p>
+            {% if selected_employee %}
+                <p class="helper-text">Employee: {{ selected_employee.name }}</p>
+            {% endif %}
+
+            {% if records %}
+                <table class="shift-table">
+                    <thead>
+                        <tr>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th>Hours</th>
+                            <th>Update</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                            <tr>
+                                <td>
+                                    <input type="datetime-local" name="clock_in"
+                                           value="{{ record.clock_in.strftime('%Y-%m-%dT%H:%M') }}"
+                                           form="shift-form-{{ record.id }}" required>
+                                </td>
+                                <td>
+                                    <input type="datetime-local" name="clock_out"
+                                           value="{% if record.clock_out %}{{ record.clock_out.strftime('%Y-%m-%dT%H:%M') }}{% endif %}"
+                                           form="shift-form-{{ record.id }}">
+                                </td>
+                                <td>
+                                    {% if record.clock_out %}
+                                        {{ ((record.clock_out - record.clock_in).total_seconds() / 3600) | round(2) }}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form id="shift-form-{{ record.id }}" method="POST"
+                                          action="{{ url_for('main.admin_update_shift') }}">
+                                        <input type="hidden" name="record_id" value="{{ record.id }}">
+                                        <input type="hidden" name="view_mode" value="shift">
+                                        <input type="hidden" name="employee_id" value="{{ selected_employee.id }}">
+                                        <input type="hidden" name="start_date" value="{{ start_date_value }}">
+                                        <input type="hidden" name="end_date" value="{{ end_date_value }}">
+                                        <button type="submit">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="empty-state">No shifts found for this period.</p>
+            {% endif %}
+
+            {% if selected_employee %}
+                <p class="helper-text">Total Hours: {{ total_hours | round(2) }}</p>
+            {% endif %}
+        </div>
+
+        {% if selected_employee %}
+            <div class="card">
+                <h3>Bonus</h3>
+                <form method="POST" action="{{ url_for('main.admin_update_bonus') }}" class="bonus-form">
+                    <input type="hidden" name="view_mode" value="shift">
+                    <input type="hidden" name="employee_id" value="{{ selected_employee.id }}">
+                    <input type="hidden" name="start_date" value="{{ start_date_value }}">
+                    <input type="hidden" name="end_date" value="{{ end_date_value }}">
+
+                    <label for="bonus_amount">Bonus Amount</label>
+                    <input type="text" name="bonus_amount" id="bonus_amount"
+                           value="{{ bonus_amount }}" placeholder="0.00">
+                    <p class="form-hint">Leave blank to clear this bonus for the period.</p>
+                    <button type="submit">Save Bonus</button>
+                </form>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="card">
+            <h3>Total Hours View</h3>
+            <p class="helper-text">Period: {{ period_label }}</p>
+            {% if total_rows %}
+                <form id="bulk-hours-form" method="POST" action="{{ url_for('main.admin_adjust_hours_bulk') }}">
+                    <input type="hidden" name="view_mode" value="total">
+                    <input type="hidden" name="start_date" value="{{ start_date_value }}">
+                    <input type="hidden" name="end_date" value="{{ end_date_value }}">
+                </form>
+                <table class="total-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Total Hours</th>
+                            <th>Round</th>
+                            <th>Shift View</th>
+                            <th>Bonus</th>
+                            <th class="save-all-cell">
+                                <button type="submit" form="bulk-hours-form">Save All</button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in total_rows %}
+                            <tr>
+                                <td>{{ row.employee.name }}</td>
+                                <td>
+                                    <div class="hours-stack">
+                                        <span class="actual-hours">
+                                            Actual: {{ row.actual_hours | round(2) }}
+                                        </span>
+                                        <input type="hidden" name="employee_id" value="{{ row.employee.id }}"
+                                               form="bulk-hours-form">
+                                        <input type="hidden" name="hours_dirty_{{ row.employee.id }}" value="0"
+                                               form="bulk-hours-form">
+                                        <input type="number" name="adjusted_hours_{{ row.employee.id }}"
+                                               value="{{ row.adjusted_hours_value }}" step="0.01" min="0"
+                                               form="bulk-hours-form" class="hours-input"
+                                               data-employee-id="{{ row.employee.id }}">
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="round-buttons">
+                                        <button type="button" class="round-button" data-direction="up">
+                                            Round Up
+                                        </button>
+                                        <button type="button" class="round-button button-ghost"
+                                                data-direction="down">
+                                            Round Down
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form method="GET" action="{{ url_for('main.admin_hours_bonuses') }}">
+                                        <input type="hidden" name="view_mode" value="shift">
+                                        <input type="hidden" name="employee_id" value="{{ row.employee.id }}">
+                                        <input type="hidden" name="start_date" value="{{ start_date_value }}">
+                                        <input type="hidden" name="end_date" value="{{ end_date_value }}">
+                                        <button type="submit" class="button-ghost">Shift View</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <input type="hidden" name="bonus_dirty_{{ row.employee.id }}" value="0"
+                                           form="bulk-hours-form">
+                                    <input type="text" name="bonus_amount_{{ row.employee.id }}"
+                                           value="{{ row.bonus_amount }}" placeholder="0.00"
+                                           form="bulk-hours-form" class="bonus-input"
+                                           data-employee-id="{{ row.employee.id }}">
+                                </td>
+                                <td></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p class="helper-text">Total Hours (All Employees): {{ overall_hours | round(2) }}</p>
+            {% else %}
+                <p class="empty-state">No employees found.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            document.querySelectorAll(".hours-input").forEach((input) => {
+                input.addEventListener("input", function () {
+                    const employeeId = input.dataset.employeeId;
+                    if (!employeeId) {
+                        return;
+                    }
+                    const dirtyField = document.querySelector(
+                        'input[name="hours_dirty_' + employeeId + '"]'
+                    );
+                    if (dirtyField) {
+                        dirtyField.value = "1";
+                    }
+                });
+            });
+
+            document.querySelectorAll(".bonus-input").forEach((input) => {
+                input.addEventListener("input", function () {
+                    const employeeId = input.dataset.employeeId;
+                    if (!employeeId) {
+                        return;
+                    }
+                    const dirtyField = document.querySelector(
+                        'input[name="bonus_dirty_' + employeeId + '"]'
+                    );
+                    if (dirtyField) {
+                        dirtyField.value = "1";
+                    }
+                });
+            });
+
+            const roundingIncrement = Number("{{ rounding_increment }}") || 0.5;
+            const epsilon = 1e-9;
+
+            document.querySelectorAll(".round-button").forEach((button) => {
+                button.addEventListener("click", function () {
+                    const row = button.closest("tr");
+                    if (!row) {
+                        return;
+                    }
+                    const input = row.querySelector(".hours-input");
+                    if (!input) {
+                        return;
+                    }
+                    const value = parseFloat(input.value);
+                    if (Number.isNaN(value)) {
+                        return;
+                    }
+                    const direction = button.dataset.direction;
+                    const increment = roundingIncrement > 0 ? roundingIncrement : 0.5;
+                    const units = value / increment;
+                    let rounded;
+                    if (direction === "up") {
+                        rounded = Math.ceil(units - epsilon) * increment;
+                    } else {
+                        rounded = Math.floor(units + epsilon) * increment;
+                    }
+                    input.value = rounded.toFixed(2);
+                    const employeeId = input.dataset.employeeId;
+                    const dirtyField = document.querySelector(
+                        'input[name="hours_dirty_' + employeeId + '"]'
+                    );
+                    if (dirtyField) {
+                        dirtyField.value = "1";
+                    }
+                });
+            });
+        })();
+    </script>
+{% endblock %}

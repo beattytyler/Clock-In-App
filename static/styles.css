@@ -143,8 +143,12 @@ label {
 
 input[type="text"],
 input[type="date"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="number"],
 input[type="password"],
-select {
+select,
+textarea {
     padding: 12px;
     border-radius: 10px;
     border: 1px solid #d5dae1;
@@ -432,12 +436,20 @@ tbody tr:nth-child(odd) {
 
 .admin-page input[type="text"],
 .admin-page input[type="date"],
+.admin-page input[type="datetime-local"],
+.admin-page input[type="email"],
+.admin-page input[type="number"],
 .admin-page input[type="password"],
 .admin-page select,
 .app-page input[type="text"],
 .app-page input[type="date"],
+.app-page input[type="datetime-local"],
+.app-page input[type="email"],
+.app-page input[type="number"],
 .app-page input[type="password"],
-.app-page select {
+.app-page select,
+.admin-page textarea,
+.app-page textarea {
     background: #0f131a;
     border: 1px solid #2b313b;
     color: var(--admin-text);
@@ -588,6 +600,7 @@ tbody tr:nth-child(odd) {
 
 .employee-row--create {
     align-items: start;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
 }
 
 .employee-row .field {
@@ -604,6 +617,21 @@ tbody tr:nth-child(odd) {
 
 .employee-row--create .row-actions {
     margin-top: 18px;
+}
+
+.toggle-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+.toggle-button.is-active {
+    background: #1b212b;
+    border-color: var(--admin-border);
+    color: var(--admin-text);
 }
 
 .admin-page .input-tall,
@@ -627,6 +655,85 @@ tbody tr:nth-child(odd) {
 .admin-page .button-danger,
 .app-page .button-danger {
     border-color: #3c4048;
+}
+
+.shift-table input[type="datetime-local"] {
+    min-width: 180px;
+}
+
+.bonus-form {
+    max-width: 360px;
+}
+
+.hours-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+
+.hours-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.actual-hours {
+    font-size: 11px;
+    color: var(--admin-muted);
+    text-align: center;
+}
+
+.hours-inline input[type="number"],
+.hours-input {
+    width: 90px;
+    text-align: center;
+}
+
+.hours-inline button {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.save-all-cell button {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.round-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.round-buttons button {
+    padding: 6px 10px;
+    font-size: 12px;
+    width: 100%;
+}
+
+.export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.export-output {
+    width: 100%;
+    max-width: 720px;
+    min-height: 220px;
+    font-family: "Consolas", "Courier New", monospace;
+    resize: vertical;
+    margin: 0 auto;
+    display: block;
+}
+
+.bonus-input {
+    width: 100px;
+    text-align: center;
 }
 
 @media (max-width: 900px) {
