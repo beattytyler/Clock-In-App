@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ClockIn Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+    <div class="app-shell app-shell--center">
+        <main class="app-content app-content--narrow">
+            <div class="card home-card">
+                <h1>ClockIn Portal</h1>
+            <p>Select the workflow you need below.</p>
+            <div class="button-grid">
+                <a class="primary-btn" href="{{ url_for('main.login') }}">
+                    <img class="button-icon" src="{{ url_for('static', filename='icons/clock-in.png') }}" alt="">
+                    Clock In
+                </a>
+                <a class="secondary-btn" href="{{ url_for('main.admin_login') }}">
+                    <img class="button-icon" src="{{ url_for('static', filename='icons/admin.png') }}" alt="">
+                    Admin Login
+                </a>
+            </div>
+        </div>
+        </main>
+    </div>
+</body>
+</html>

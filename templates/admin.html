@@ -1,0 +1,206 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Pay Period Report{% endblock %}
+
+{% block content %}
+    <div class="card" id="pay-period-report">
+        <h2>Pay Period Report</h2>
+        <form method="POST" action="{{ url_for('main.admin') }}" class="admin-form" id="admin-form"
+              data-report-url="{{ url_for('main.admin_report') }}">
+            <label for="view_mode">View</label>
+            <select name="view_mode" id="view_mode">
+                <option value="custom" {% if view_mode == "custom" %}selected{% endif %}>
+                    Custom Date Range
+                </option>
+                <option value="pay_period" {% if view_mode == "pay_period" %}selected{% endif %}>
+                    Pay Period
+                </option>
+            </select>
+
+            <label for="start_date">Start Date</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date_value }}">
+
+            <label for="end_date">End Date</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date_value }}">
+
+            <label for="pay_period_date">Pay Period Date (optional)</label>
+            <input type="date" name="pay_period_date" id="pay_period_date" value="{{ pay_period_date_value }}">
+            <p class="form-hint">Pick any date in the pay period you want to review.</p>
+
+            <label for="employee_id">Employee</label>
+            <select name="employee_id" id="employee_id">
+                <option value="all">All Employees</option>
+                {% for emp in employees %}
+                    <option value="{{ emp.id }}"
+                        {% if selected_employee and emp.id == selected_employee.id %}selected{% endif %}>
+                        {{ emp.name }} ({{ emp.employee_code }})
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">View Records</button>
+        </form>
+        <p class="error" id="admin-error" {% if not error %}style="display: none;"{% endif %}>
+            {{ error }}
+        </p>
+    </div>
+
+    <div id="admin-results">
+        {% if show_results %}
+            <div class="card history-card">
+                <h3>Results</h3>
+                {% if view_mode == "pay_period" and pay_period_start and pay_period_end %}
+                    <p class="helper-text">
+                        Pay Period: {{ pay_period_start.strftime("%b %d, %Y") }} -
+                        {{ pay_period_end.strftime("%b %d, %Y") }}
+                    </p>
+                {% elif custom_start and custom_end %}
+                    <p class="helper-text">
+                        Custom Range: {{ custom_start.strftime("%b %d, %Y") }} -
+                        {{ custom_end.strftime("%b %d, %Y") }}
+                    </p>
+                {% endif %}
+
+                {% if records %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Clock In</th>
+                                <th>Clock Out</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in records %}
+                            <tr>
+                                <td>{{ r.employee.name }}</td>
+                                <td>{{ r.clock_in.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                <td>
+                                    {% if r.clock_out %}
+                                        {{ r.clock_out.strftime('%b %d, %Y %I:%M %p') }}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r.clock_out %}
+                                        {{ ((r.clock_out - r.clock_in).total_seconds() / 3600) | round(2) }}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    {% if view_mode == "pay_period" %}
+                        <p class="empty-state">There are no hours logged for this period</p>
+                    {% else %}
+                        <p class="empty-state">No records found for this period.</p>
+                    {% endif %}
+                {% endif %}
+                <p class="helper-text">Total Hours: {{ total_hours | round(2) }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            const form = document.getElementById("admin-form");
+            const resultsContainer = document.getElementById("admin-results");
+            const errorEl = document.getElementById("admin-error");
+            const payPeriodInput = document.getElementById("pay_period_date");
+
+            if (!form || !window.fetch) {
+                return;
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+
+            function renderResults(data) {
+                if (data.error) {
+                    errorEl.textContent = data.error;
+                    errorEl.style.display = "block";
+                } else {
+                    errorEl.textContent = "";
+                    errorEl.style.display = "none";
+                }
+
+                if (!data.show_results) {
+                    resultsContainer.innerHTML = "";
+                    return;
+                }
+
+                if (data.pay_period_date_value && payPeriodInput) {
+                    payPeriodInput.value = data.pay_period_date_value;
+                }
+
+                let html = '<div class="card history-card">';
+                html += "<h3>Results</h3>";
+
+                if (data.period_label) {
+                    html += '<p class="helper-text">' + escapeHtml(data.period_label) + "</p>";
+                }
+
+                if (data.records && data.records.length) {
+                    html += "<table>";
+                    html += "<thead><tr>";
+                    html += "<th>Employee</th>";
+                    html += "<th>Clock In</th>";
+                    html += "<th>Clock Out</th>";
+                    html += "<th>Hours</th>";
+                    html += "</tr></thead><tbody>";
+                    data.records.forEach((record) => {
+                        html += "<tr>";
+                        html += "<td>" + escapeHtml(record.employee) + "</td>";
+                        html += "<td>" + escapeHtml(record.clock_in) + "</td>";
+                        html += "<td>" + (record.clock_out ? escapeHtml(record.clock_out) : "--") + "</td>";
+                        html += "<td>";
+                        if (record.hours !== null && record.hours !== undefined) {
+                            html += Number(record.hours).toFixed(2);
+                        } else {
+                            html += "--";
+                        }
+                        html += "</td></tr>";
+                    });
+                    html += "</tbody></table>";
+                } else {
+                    html += '<p class="empty-state">' + escapeHtml(data.empty_message) + "</p>";
+                }
+
+                html += '<p class="helper-text">Total Hours: ' + Number(data.total_hours).toFixed(2) + "</p>";
+                html += "</div>";
+                resultsContainer.innerHTML = html;
+            }
+
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const reportUrl = form.dataset.reportUrl;
+                const formData = new FormData(form);
+                fetch(reportUrl, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+                    .then((response) => response.json())
+                    .then(renderResults)
+                    .catch(() => {
+                        form.submit();
+                    });
+            });
+        })();
+    </script>
+{% endblock %}

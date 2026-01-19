@@ -1,0 +1,50 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Manage Employees{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <h2>Manage Employees</h2>
+        <p class="helper-text">Update names and codes or remove employees.</p>
+        {% if status_message %}
+            <p class="status-message {% if status_type == 'error' %}status-error{% else %}status-success{% endif %}">
+                {{ status_message }}
+            </p>
+        {% endif %}
+
+        {% if employees %}
+            <div class="employee-list">
+                {% for employee in employees %}
+                    <form method="POST" action="{{ url_for('main.admin_update_employee') }}" class="employee-row">
+                        <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                        <div class="field">
+                            <label for="first_name_{{ employee.id }}">First Name</label>
+                            <input type="text" name="first_name" id="first_name_{{ employee.id }}"
+                                   value="{{ employee.first_name }}" required>
+                        </div>
+                        <div class="field">
+                            <label for="last_name_{{ employee.id }}">Last Name</label>
+                            <input type="text" name="last_name" id="last_name_{{ employee.id }}"
+                                   value="{{ employee.last_name }}" required>
+                        </div>
+                        <div class="field">
+                            <label for="employee_code_{{ employee.id }}">Employee Code</label>
+                            <input type="text" name="employee_code" id="employee_code_{{ employee.id }}"
+                                   value="{{ employee.employee_code }}" maxlength="4" required>
+                        </div>
+                        <div class="row-actions">
+                            <button type="submit">Save</button>
+                            <button type="submit"
+                                    class="button-ghost button-danger"
+                                    formaction="{{ url_for('main.admin_delete_employee') }}">
+                                Remove
+                            </button>
+                        </div>
+                    </form>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">No employees found.</p>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Add New Employee{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <h2>Add New Employee</h2>
+        <p class="helper-text">Create a new employee record.</p>
+        <div class="employee-list">
+            <form method="POST" action="{{ url_for('main.admin_add_employee') }}" id="employee-form"
+                  data-employee-url="{{ url_for('main.admin_add_employee') }}"
+                  class="employee-row employee-row--create">
+                <div class="field">
+                    <label for="first_name">First Name</label>
+                    <input type="text" name="first_name" id="first_name" autocomplete="given-name" required>
+                </div>
+
+                <div class="field">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" name="last_name" id="last_name" autocomplete="family-name" required>
+                </div>
+
+                <div class="field">
+                    <label for="employee_code">Employee Code</label>
+                    <input type="text" name="employee_code" id="employee_code" maxlength="4" required
+                           class="input-tall">
+                    <p class="form-hint">Employee code must be 4 characters.</p>
+                </div>
+
+                <div class="row-actions">
+                    <button type="submit">Add Employee</button>
+                </div>
+            </form>
+        </div>
+        <p class="status-message {% if status_type == 'error' %}status-error{% elif status_type == 'success' %}status-success{% endif %}"
+           id="employee-message" {% if not status_message %}style="display: none;"{% endif %}>
+            {{ status_message or "" }}
+        </p>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        (function () {
+            const employeeForm = document.getElementById("employee-form");
+            const employeeMessage = document.getElementById("employee-message");
+
+            if (!employeeForm || !window.fetch) {
+                return;
+            }
+
+            function setEmployeeMessage(message, isError) {
+                if (!employeeMessage) {
+                    return;
+                }
+                employeeMessage.textContent = message;
+                employeeMessage.style.display = message ? "block" : "none";
+                employeeMessage.classList.remove("status-success", "status-error");
+                if (message) {
+                    employeeMessage.classList.add(isError ? "status-error" : "status-success");
+                }
+            }
+
+            employeeForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                const employeeUrl = employeeForm.dataset.employeeUrl;
+                const formData = new FormData(employeeForm);
+                fetch(employeeUrl, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        setEmployeeMessage(data.message, !data.success);
+                        if (data.success) {
+                            employeeForm.reset();
+                        }
+                    })
+                    .catch(() => {
+                        employeeForm.submit();
+                    });
+            });
+        })();
+    </script>
+{% endblock %}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="admin-page">
+    <div class="admin-shell">
+        <aside class="card admin-nav">
+            <div class="nav-header">
+                <p class="nav-title">Admin</p>
+                <p class="nav-subtitle">Clock In Reports</p>
+            </div>
+            <nav class="nav-links">
+                <a class="nav-link {% if active_nav == 'report' %}active{% endif %}"
+                   href="{{ url_for('main.admin') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/payroll-report.png') }}" alt="">
+                    Pay Period Report
+                </a>
+                <a class="nav-link {% if active_nav == 'add' %}active{% endif %}"
+                   href="{{ url_for('main.admin_add_employee_page') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/add-employee.png') }}" alt="">
+                    Add New Employee
+                </a>
+                <a class="nav-link {% if active_nav == 'manage' %}active{% endif %}"
+                   href="{{ url_for('main.admin_manage_employees') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/edit-employee.png') }}" alt="">
+                    Manage Employees
+                </a>
+                <a class="nav-link nav-logout" href="{{ url_for('main.logout') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/logout.png') }}" alt="">
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

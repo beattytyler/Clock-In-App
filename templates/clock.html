@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clock In / Out</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="app-page">
+    <div class="app-shell">
+        <aside class="card app-nav">
+            <div class="nav-header">
+                <p class="nav-title">{{ employee.name }}</p>
+                <p class="nav-subtitle">Clock In / Out</p>
+            </div>
+            <nav class="nav-links">
+                <a class="nav-link active" href="{{ url_for('main.clock') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/clock-in.png') }}" alt="">
+                    Clock In / Out
+                </a>
+                <a class="nav-link nav-logout" href="{{ url_for('main.logout') }}">
+                    <img class="nav-icon-img" src="{{ url_for('static', filename='icons/logout.png') }}" alt="">
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="app-content">
+            <div class="card clock-card">
+                <h2>Hi {{ employee.name }},</h2>
+                <p class="pay-period">
+                    Current Pay Period:
+                    {{ pay_period_start.strftime("%b %d") }} - {{ pay_period_end.strftime("%b %d") }}
+                </p>
+
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+
+                <form method="POST" class="action-buttons">
+                    <button name="action" value="in" type="submit" {% if not can_clock_in %}disabled{% endif %}>
+                        Clock In
+                    </button>
+                    <button name="action" value="out" type="submit" {% if not can_clock_out %}disabled{% endif %}>
+                        Clock Out
+                    </button>
+                </form>
+
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <p class="label">Current Shift</p>
+                        {% if active_record %}
+                            <p class="value">{{ current_shift_hours|round(2) }} hrs</p>
+                            <p class="supporting">
+                                Started {{ active_record.clock_in.strftime("%b %d, %I:%M %p") }}
+                            </p>
+                        {% else %}
+                            <p class="value muted">Not clocked in</p>
+                        {% endif %}
+                    </div>
+                    <div class="summary-card">
+                        <p class="label">Bi-Weekly Total</p>
+                        <p class="value">{{ total_biweekly_hours|round(2) }} hrs</p>
+                        <p class="supporting">
+                            {{ pay_period_start.strftime("%b %d") }} - {{ pay_period_end.strftime("%b %d") }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card history-card">
+                <h3>This Pay Period</h3>
+                {% if records %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Clock In</th>
+                                <th>Clock Out</th>
+                                <th>Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in records %}
+                                <tr>
+                                    <td>{{ record.clock_in.strftime("%b %d") }}</td>
+                                    <td>{{ record.clock_in.strftime("%I:%M %p") }}</td>
+                                    <td>
+                                        {% if record.clock_out %}
+                                            {{ record.clock_out.strftime("%I:%M %p") }}
+                                        {% else %}
+                                            --
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if record.clock_out %}
+                                            {{ ((record.clock_out - record.clock_in).total_seconds() / 3600)|round(2) }}
+                                        {% else %}
+                                            --
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="empty-state">No time entries yet this pay period.</p>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
