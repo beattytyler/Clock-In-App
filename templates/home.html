@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>ClockIn Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>html{visibility:hidden;}</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"
+          onload="document.documentElement.style.visibility='visible'">
+    <noscript><style>html{visibility:visible;}</style></noscript>
 </head>
 <body class="app-page">
     <div class="app-shell app-shell--center">

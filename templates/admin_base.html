@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Admin{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>html{visibility:hidden;}</style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"
+          onload="document.documentElement.style.visibility='visible'">
+    <noscript><style>html{visibility:visible;}</style></noscript>
 </head>
 <body class="admin-page">
     <div class="admin-shell">
